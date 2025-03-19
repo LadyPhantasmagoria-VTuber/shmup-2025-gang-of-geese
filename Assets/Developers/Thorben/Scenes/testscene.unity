@@ -151,7 +151,7 @@ MonoBehaviour:
   roadPrefab: {fileID: 419226678516741255, guid: cab0af782d5d93d49afcc7008a74df00, type: 3}
   numberOfRoads: 5
   roadLength: 20
-  speed: 10
+  speed: 50
 --- !u!4 &522518468
 Transform:
   m_ObjectHideFlags: 0
