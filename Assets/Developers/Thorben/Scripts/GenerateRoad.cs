@@ -40,10 +40,9 @@ public class InfiniteHighway : MonoBehaviour
     void SpawnRoad()
     {
         // The position where the new road segment will spawn.
-        float spawnPositionZ = spawnZ + roadLength / 2f;
+        float spawnPositionZ = 0f; // Always spawn at the same point
         GameObject newRoad = Instantiate(roadPrefab, new Vector3(0f, 0f, spawnPositionZ), Quaternion.identity);
         roads.Add(newRoad);
-        spawnZ += roadLength;  // Update spawn position for the next road
     }
 
     void RecycleRoad()
@@ -51,6 +50,6 @@ public class InfiniteHighway : MonoBehaviour
         GameObject oldRoad = roads[0];
         roads.RemoveAt(0);
         Destroy(oldRoad);  // Remove the old road segment
-        SpawnRoad();       // Spawn a new road segment at the end, aligned correctly
+        SpawnRoad();       // Spawn a new road segment at the same point
     }
 }
