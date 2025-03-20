@@ -5,6 +5,7 @@ public class Playershoot : MonoBehaviour
     public GameObject bulletPrefab;  // The bullet prefab to instantiate
     public Transform bulletSpawnPoint;  // The point from where the bullet will be spawned
     public float bulletSpeed = 20f;  // The speed of the bullet
+    public float bulletLifetime = 5f;  // The lifetime of the bullet in seconds
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -29,7 +30,9 @@ public class Playershoot : MonoBehaviour
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            rb.velocity = bulletSpawnPoint.forward * bulletSpeed;
+            rb.linearVelocity = bulletSpawnPoint.forward * bulletSpeed;
         }
+        // Destroy the bullet after a certain amount of seconds
+        Destroy(bullet, bulletLifetime);
     }
 }
