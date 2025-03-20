@@ -2,14 +2,15 @@ using UnityEngine;
 
 public class movement : MonoBehaviour
 {
-    public float moveDistance = 1f; // Distance to move per key press
     public float xRange = 5f; // Horizontal movement boundaries
     public float horizontalSpeed = 5f; // Speed of horizontal movement
 
     [Header("Car Specifications")]
-    public float motorForce = 15f; // Increased from 5f for more noticeable movement
+    public float baseMotorForce = 15f; // Base forward force (auto-movement)
+    public float accelerationForce = 5f; // Additional force when accelerating
     public float brakeForce = 3f;
     public float maxSpeed = 100f;
+    public float minSpeed = 20f; // Minimum speed the car will maintain
     public float reverseMaxSpeed = 30f;
 
     // Private variables
@@ -18,6 +19,7 @@ public class movement : MonoBehaviour
     private float horizontalInput;
     private float currentBrakeForce;
     private bool isReversing = false;
+    private float currentSpeedMultiplier = 1f; // Multiplier for speed control
 
     private void Start()
     {
@@ -49,13 +51,13 @@ public class movement : MonoBehaviour
         GetInput();
 
         // Debug output for troubleshooting
-        Debug.Log($"Acceleration: {accelerationInput}, Speed: {rb.linearVelocity.magnitude}");
+        Debug.Log($"Speed Multiplier: {currentSpeedMultiplier}, Current Speed: {rb.linearVelocity.magnitude}");
     }
 
     private void FixedUpdate()
     {
-        // Apply forward/backward movement first
-        HandleMotor();
+        // Apply automatic forward movement with speed control
+        HandleAutomaticMovement();
 
         // Apply horizontal movement
         HandleHorizontalMovement();
@@ -84,30 +86,28 @@ public class movement : MonoBehaviour
         accelerationInput = 0f;
         currentBrakeForce = 0f;
 
+        // Increase speed
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
         {
+            // Increase speed multiplier (clamped to reasonable limits)
+            currentSpeedMultiplier += 0.05f;
+            currentSpeedMultiplier = Mathf.Clamp(currentSpeedMultiplier, 0.5f, 2.0f);
             accelerationInput = 1f;
         }
 
+        // Decrease speed
         if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
         {
+            // Decrease speed multiplier (clamped to reasonable limits)
+            currentSpeedMultiplier -= 0.05f;
+            currentSpeedMultiplier = Mathf.Clamp(currentSpeedMultiplier, 0.5f, 2.0f);
+
+            // Apply brakes if below minimum speed
             float forwardVelocity = Vector3.Dot(rb.linearVelocity, transform.forward);
-            if (forwardVelocity > 0.5f)
+            if (forwardVelocity < minSpeed && currentSpeedMultiplier < 0.6f)
             {
-                // Apply brakes when moving forward
-                currentBrakeForce = brakeForce;
-                accelerationInput = 0f;
+                currentSpeedMultiplier = 0.6f; // Prevent going too slow
             }
-            else
-            {
-                // Apply reverse throttle when stopped or moving slowly
-                accelerationInput = -1f;
-                isReversing = true;
-            }
-        }
-        else
-        {
-            isReversing = false;
         }
     }
 
@@ -131,25 +131,26 @@ public class movement : MonoBehaviour
         }
     }
 
-    private void HandleMotor()
+    private void HandleAutomaticMovement()
     {
-        // Direct application of force for debugging - this ensures the car moves forward
-        if (accelerationInput != 0)
+        // Always apply a base forward force for automatic movement
+        float appliedForce = baseMotorForce * currentSpeedMultiplier;
+
+        // Add additional acceleration if requested
+        if (accelerationInput > 0)
         {
-            // Apply a direct force in the forward direction
-            Vector3 forceDirection = accelerationInput > 0 ? transform.forward : -transform.forward;
-            float forceMagnitude = accelerationInput > 0 ? motorForce : (motorForce * 0.5f);
-
-            rb.AddForce(forceDirection * forceMagnitude, ForceMode.Force);
-
-            // Debug visualization
-            Debug.DrawRay(transform.position, forceDirection * 2, Color.red, 0.1f);
+            appliedForce += accelerationForce;
         }
+
+        // Apply the force in the forward direction
+        rb.AddForce(transform.forward * appliedForce, ForceMode.Force);
+
+        // Debug visualization
+        Debug.DrawRay(transform.position, transform.forward * 2, Color.red, 0.1f);
 
         // Apply brakes if needed
         if (currentBrakeForce > 0)
         {
-            // Apply brakes
             rb.AddForce(-rb.linearVelocity.normalized * currentBrakeForce);
         }
     }
@@ -165,15 +166,31 @@ public class movement : MonoBehaviour
     private void LimitSpeed()
     {
         float currentSpeed = rb.linearVelocity.magnitude;
-        float maxAllowedSpeed = isReversing ? reverseMaxSpeed : maxSpeed;
 
-        if (currentSpeed > maxAllowedSpeed)
+        // Calculate dynamic max speed based on multiplier
+        float adjustedMaxSpeed = maxSpeed * currentSpeedMultiplier;
+
+        // Ensure we respect the absolute maximum
+        adjustedMaxSpeed = Mathf.Clamp(adjustedMaxSpeed, minSpeed, maxSpeed);
+
+        // Apply speed limit
+        if (currentSpeed > adjustedMaxSpeed)
         {
-            float brakeSpeed = currentSpeed - maxAllowedSpeed;
+            float brakeSpeed = currentSpeed - adjustedMaxSpeed;
             Vector3 normalizedVelocity = rb.linearVelocity.normalized;
             Vector3 brakeVelocity = normalizedVelocity * brakeSpeed;
 
             rb.AddForce(-brakeVelocity * 2); // Apply limiting force
+        }
+
+        // Apply minimum speed
+        if (currentSpeed < minSpeed && !isReversing)
+        {
+            float boostNeeded = minSpeed - currentSpeed;
+            if (boostNeeded > 0)
+            {
+                rb.AddForce(transform.forward * boostNeeded, ForceMode.Acceleration);
+            }
         }
     }
 }

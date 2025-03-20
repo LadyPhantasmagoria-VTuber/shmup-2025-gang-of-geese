@@ -149,9 +149,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   roadPrefab: {fileID: 419226678516741255, guid: cab0af782d5d93d49afcc7008a74df00, type: 3}
-  numberOfRoads: 5
+  numberOfRoads: 15
   roadLength: 20
-  speed: 50
+  speed: 5
+  recycleThreshold: 5
 --- !u!4 &522518468
 Transform:
   m_ObjectHideFlags: 0
