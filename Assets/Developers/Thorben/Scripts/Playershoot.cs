@@ -36,3 +36,4 @@ public class Playershoot : MonoBehaviour
         Destroy(bullet, bulletLifetime);
     }
 }
+
