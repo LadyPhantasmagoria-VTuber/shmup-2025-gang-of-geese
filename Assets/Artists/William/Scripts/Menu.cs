@@ -26,5 +26,5 @@ public class Menu : MonoBehaviour
    }
 }
 
-//For additional scenes to switch between, copy paste a section and make sure the number in brackets allignes with the number in your scene manager (Look 
+//For additional scenes to switch between, copy paste a section and make sure the number in brackets alignes with the number in your scene manager (Look 
 //in the file -> Build profile -> Scene list to find out the corresponding number for the scenes) 
